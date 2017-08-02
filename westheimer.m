@@ -14,11 +14,11 @@ addpath(genpath('~/code/git/svndl'));
 clear all
 close all
 
-paradigm = 'whmCancellation2Sz'; % 'whmSuperSet' | 'whmHexCancellation' | 'whmCancellation2Sz'
-stimFrq = 3; % 3 for whmHexCancellation, whmCancellation2Sz | [30/11,3,3.75] for whmSuperSet
-nPol = 1; % 2 for whmSuperset | 1 for whmHexCancellation, whmCancellation2Sz
-cndLabels = {'UR,F,20' 'UR,F,14' 'LR,F,20' 'LR,F,14' 'UR,P1,20' 'UR,P1,14' 'LR,P1,20' 'LR,P1,14' 'UR,P2,20' 'UR,P2,14' 'LR,P2,20' 'LR,P2,14' 'UH,20' 'LH,20' ...
-    'UR,20' 'LR,20' 'UH,14' 'LH,14' 'UR,14' 'LR,14'};
+paradigm = 'whmSuperSet'; % 'whmSuperSet' | 'whmHexCancellation' | 'whmCancellation2Sz'
+stimFrq = [30/11,3,3.75]; % 3 for whmHexCancellation, whmCancellation2Sz | [30/11,3,3.75] for whmSuperSet
+nPol = 2; % 2 for whmSuperset | 1 for whmHexCancellation, whmCancellation2Sz
+% cndLabels = {'UR,F,20' 'UR,F,14' 'LR,F,20' 'LR,F,14' 'UR,P1,20' 'UR,P1,14' 'LR,P1,20' 'LR,P1,14' 'UR,P2,20' 'UR,P2,14' 'LR,P2,20' 'LR,P2,14' 'UH,20' 'LH,20' ...
+%     'UR,20' 'LR,20' 'UH,14' 'LH,14' 'UR,14' 'LR,14'};
 
 parentDir = '/Users/babylab/Desktop/whm';
 [dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm);
@@ -89,11 +89,31 @@ timeCourseLen = repmat(time,[1,length(cnds)]);
 tic
 for i = 1:length(cnds)
 %     [rcaDataALL, W, A] = rcaRunProject(cnds{i}, RCAfolder, timeCourseLen(i), cndNames{i}, nPol);
-    [rcaDataALL, W, A] = rcaRunProject(RCA([16 20],:), RCAfolder, time, 'LR_20v14', nPol);
+    [rcaDataALL, W, A] = rcaRunProject(RCA([15 19],:), RCAfolder, time, 'UR_20v14', nPol);
 %     [rcaDataALL, W, A] = rcaRunProject(RCA(9:10,:), RCAfolder, 1000/3,
 %     'cnd9v10', nPol); TEST
 end
 toc
+
+%% MULTIPLE SUBPLOTS
+tc1 = linspace(0, timeCourseLen(1), size(rcaDataALL{1, 1}, 1));
+
+[mu12, s12] = prepData(rcaDataALL12);
+[mu78, s78] = prepData(rcaDataALL78);
+[mu1314, s1314] = prepData(rcaDataALL1314);
+[mu1920, s1920] = prepData(rcaDataALL1920);
+[mu2526, s2526] = prepData(rcaDataALL2526);
+[mu3132, s3132] = prepData(rcaDataALL3132);
+    
+group_upper_27_mu = [mu12(:, 1) mu78(:, 1) mu1314(:, 1)];
+group_lower_27_mu = [mu1920(:, 1) mu2526(:, 1) mu3132(:, 1)];   
+group_upper_27_s = [s12(:, 1) s78(:, 1) s1314(:, 1)];
+group_lower_27_s = [s1920(:, 1) s2526(:, 1) s3132(:, 1)];
+
+[h1, h2] = subplotMultipleComponents(tc1, {group_upper_27_mu, group_upper_27_s}, ... % each group = 1 cnd
+        {group_lower_27_mu, group_lower_27_s}, {'Lower 2.73 Hz', 'Upper 2.73Hz'});
+    saveas(h1, 'Group  2.73 Hz _byGroup.fig');
+    saveas(h2, 'Group  2.73 Hz _byRegion.fig');
 
 %% COMPARE CONDITIONS VIA TIMECOURSE
 chanROI = 71:76;

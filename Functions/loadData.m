@@ -33,11 +33,11 @@ for t = 1:length(dataFiles)
     cnd(t) = str2double(filePath_complete(end-10:end-9)); 
     pre = RTseg.CndTiming(cnd(t)).preludeDurSec;
     post = RTseg.CndTiming(cnd(t)).postludeDurSec;
-    epochLength = RTseg.CndTiming(cnd(t)).stepDurSec;
+    epochLength(t) = RTseg.CndTiming(cnd(t)).stepDurSec;
     allData = load(filePath_complete);
     sampRate = allData.FreqHz;    
-    nPre = pre/epochLength;
-    nPost = post/epochLength;
+    nPre = pre/epochLength(t);
+    nPost = post/epochLength(t);
     if cnd(t) == 1 || cnd(t) == cnd(t-1)
         raw_cutTemp(:,:,t-nTri*(cndIdx-1)) = double(allData.RawTrial(round(sampRate*pre+1):end-round(sampRate*post),1:128)); % removing pre/postludes
         isEpochOKTemp(:,:,t-nTri*(cndIdx-1)) = allData.IsEpochOK(1+nPre:end-nPost,:);
@@ -57,13 +57,33 @@ for t = 1:length(dataFiles)
 end
 
 % REARRANGING & FILTERING OUT BAD DATA 
-cIdx = repmat([1:nFrq],[1,length(raw_cut)/nFrq]);
+% find # of files before freq (epochLength) changes
+% divide that by num of trials to get frequency of frqchange between
+% conditions
+frqCounter = 1;
+for t = 1:length(epochLength)
+    if epochLength(t) == epochLength(t+1)
+        frqCounter = frqCounter + 1;
+    else
+        break
+    end
+end
+freqOfFrqChange = frqCounter/nTri; % every 2 trials it switches frq OR isnt this just nTri?
+len = 1:nFrq; %% TURN THIS INTO THAT ARRAY BELOW
+for i = 1:nFrq*nTri
+    idx(i) = 1:nFrq;
+end
+
+1 1 2 2 3 3 
+1 2 3 4 5 6
+
+frqIdx = repmat([1:nFrq],[1,length(raw_cut)/nFrq]); % BROKEN HERE; 1 2 3 1 2 3 when it should be 1 1 2 2 3 3
 for c = 1:nCnd
     numEpochs = size(isEpochOK{c},1);
     rearrByEpoch = reshape(raw_cut{c},[],numEpochs,128,nTri); % nTimept x nEpoch x nChan x nTri
     isEpochOKLog = logical(isEpochOK{c});
     rearrByEpoch(:,~isEpochOKLog) = NaN;
-    rearrByCyc = reshape(rearrByEpoch,sampRate/stimFrq(cIdx(c)),[],numEpochs,128,nTri); % nTimept x nCyc x nEpoch x nChan x nTri
+    rearrByCyc = reshape(rearrByEpoch,sampRate/stimFrq(frqIdx(c)),[],numEpochs,128,nTri); % nTimept x nCyc x nEpoch x nChan x nTri
     rearr = permute(rearrByCyc,[2 3 5 4 1]); % nCyc x nEpoch x nTri x nChn x nTimept
     rearrBySamp = reshape(rearr,[],128,size(rearrByCyc,1));
 
