@@ -44,7 +44,6 @@ switch paradigm
         frq1 = RCA([1:2,7:8,13:14,19:20,25:26,31:32],:);
         frq2 = RCA([1:2,7:8,13:14,19:20,25:26,31:32]+2,:);
         frq3 = RCA([1:2,7:8,13:14,19:20,25:26,31:32]+4,:);
-        RCA_SuperSetFrq = {frq1 frq2 frq3};
         % EFFECT OF ECCENTRICITY: POOLING OVER TF + POL
         SF = RCA([1:6],:);
         SP1 = RCA([1:6]+6,:);
@@ -72,18 +71,13 @@ switch paradigm
         RCA_UH = RCA([13,17],:);
         RCA_LH = RCA([14,18],:);
         RCA_Cancellation2Sz = {RCA_20 RCA_14 RCA_F RCA_P1 RCA_P2 RCA_UR RCA_LR RCA_UH RCA_LH};
-%         var2str = @(x) inputname(1);
-%         for i = 1:length(RCA_Cancellation2Sz)
-%             names(i) = var2str(RCA_20);
-%         end
-%         boo = struct('data',{{RCA_20 RCA_14 RCA_F RCA_P1 RCA_P2 RCA_UR RCA_LR RCA_UH RCA_LH}});
+        var2str = 
+        s = struct('data',{{RCA_20 RCA_14 RCA_F RCA_P1 RCA_P2 RCA_UR RCA_LR RCA_UH RCA_LH}},'names',
 end
 
 %% RUN RCA
-% * is there a way to automate RCA subset name generation? 
-
 time = 1000/3; % [1000/(30/11),1000/3,1000/3.75] 
-cnds = RCA_Cancellation2Sz;
+cnds = {RCA_20 RCA_14 RCA_F RCA_P1 RCA_P2 RCA_UR RCA_LR RCA_UH RCA_LH}; % {allUL allLL allF allP1 allP2} | {frq1 frq2 frq3} | {RCA_UR RCA_UL RCA_LL RCA_LR RCA_F RCA_P1 RCA_P2}
 cndNames = {'20' '14' 'F' 'P1' 'P2' 'UR' 'LR' 'UH' 'LH' }; % {'allUL' 'allLL' 'allF' 'allP1' 'allP2'} | {'frq1' 'frq2' 'frq3'}
 timeCourseLen = repmat(time,[1,length(cnds)]); 
 tic
