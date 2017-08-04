@@ -7,10 +7,10 @@ function [data, avgedData, nCnd] = loadData(curDataFolder,stimFrq)
 %   stimFrq:        Double. Stimulus frequency.
 %
 % OUTPUTS
-%   rearrByCnd:     Double array, [nChan x nTrials x nCond x nTimepts].
+%   data:           Cell array, {1 x nCnd}(nChan x nTrials x nTimepts).
 %                   Timecourse data sorted into conditions.
-%   fnlData:        Double array, [nChan x nCond x nTimepts]. rearrByCnd,
-%                   averaged over trials.
+%   avgedData:      Cell array, {1 x nCnd}(nChan x nTimepts).
+%                   Timecourse data averaged over trials.
 %   nCnd:           Double. Number of conditions.
 %
 % Bethany H., 2017
@@ -57,45 +57,26 @@ for t = 1:length(dataFiles)
 end
 
 % REARRANGING & FILTERING OUT BAD DATA 
-% find # of files before freq (epochLength) changes
-% divide that by num of trials to get frequency of frqchange between
-% conditions
-frqCounter = 1;
-for t = 1:length(epochLength)
-    if epochLength(t) == epochLength(t+1)
-        frqCounter = frqCounter + 1;
-    else
-        break
-    end
-end
-freqOfFrqChange = frqCounter/nTri; % every 2 trials it switches frq OR isnt this just nTri?
-len = 1:nFrq; %% TURN THIS INTO THAT ARRAY BELOW
-for i = 1:nFrq*nTri
-    idx(i) = 1:nFrq;
-end
 
-1 1 2 2 3 3 
-1 2 3 4 5 6
+possibleLen = sampRate./stimFrq;
 
-frqIdx = repmat([1:nFrq],[1,length(raw_cut)/nFrq]); % BROKEN HERE; 1 2 3 1 2 3 when it should be 1 1 2 2 3 3
 for c = 1:nCnd
     numEpochs = size(isEpochOK{c},1);
     rearrByEpoch = reshape(raw_cut{c},[],numEpochs,128,nTri); % nTimept x nEpoch x nChan x nTri
     isEpochOKLog = logical(isEpochOK{c});
-    rearrByEpoch(:,~isEpochOKLog) = NaN;
-    rearrByCyc = reshape(rearrByEpoch,sampRate/stimFrq(frqIdx(c)),[],numEpochs,128,nTri); % nTimept x nCyc x nEpoch x nChan x nTri
+    rearrByEpoch(:,~isEpochOKLog) = NaN;   
+    for i = 1:length(possibleLen) % only works if freq are not multiples of each other
+        if floor(size(rearrByEpoch,1)/possibleLen(i)) ~= size(rearrByEpoch,1)/possibleLen(i)        
+        else
+            len = possibleLen(i);
+            break
+        end
+    end
+    rearrByCyc = reshape(rearrByEpoch,len,[],numEpochs,128,nTri); % nTimept x nCyc x nEpoch x nChan x nTri
     rearr = permute(rearrByCyc,[2 3 5 4 1]); % nCyc x nEpoch x nTri x nChn x nTimept
     rearrBySamp = reshape(rearr,[],128,size(rearrByCyc,1));
-
-    % BASELINING
-    firstVal = rearrBySamp(:,:,1);
-    for i = 1:size(rearrBySamp,3)
-        baselined(:,:,i) = rearrBySamp(:,:,i) - firstVal;
-    end
-
-    data{c} = permute(baselined,[3 2 1]); % took out baselining
+    data{c} = permute(rearrBySamp,[3 2 1]);
     avgedData{c} = squeeze(nanmean(data{c},3)); % avged over trials
-    clear baselined
 end
 
 % TEST PLOTS

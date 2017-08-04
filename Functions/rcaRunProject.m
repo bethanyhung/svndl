@@ -18,7 +18,7 @@ function [rcaDataALL, W, A] = rcaRunProject(eegSrc, dirResData, timeCourseLen, s
     end
     % do the plots
     
-    catDataAll = cat(3, rcaDataALL{:});
+    catDataAll = cat(3, rcaDataALL{:}); % 154 x 3 x 1080
     muDataAll = nanmean(catDataAll, 3);
     muDataAll = muDataAll - repmat(muDataAll(1, :), [size(muDataAll, 1) 1]);
     semDataAll = nanstd(catDataAll, [], 3)/(sqrt(size(catDataAll, 3)));

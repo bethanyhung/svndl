@@ -27,17 +27,14 @@ tic
 for s = 1:length(dataSet)
     fprintf('Running subject %s\n', names{s});
     curDataFolder = sprintf('%s/%s', dataFolder,dataSet{s});   
-    [data{s},avgedData{s}, nCnd] = loadData(curDataFolder,stimFrq); % data: nChan x nTimept x nTri x nCnd
+    [~,avgedData{s}, nCnd] = loadData(curDataFolder,stimFrq); % data: nChan x nTimept x nTri x nCnd
+%     for c = 1:nCnd
+%         RCA{c,s} = squeeze(data{s}{c}); % FORMAT: cell array {cnd x subj}(samples x channels x trials)
+%     end
 end
 toc
 
 %% SORTING DATA FOR RCA
-% FORMAT: cell array {cnd x subj}(samples x channels x trials)
-for a = 1:length(dataSet)
-    for c = 1:nCnd
-        RCA{c,a} = squeeze(data{a}{c});
-    end
-end
 switch paradigm    
     case 'whmSuperSet'
         % EFFECT OF FREQ: POOLING OVER ECC + POL
@@ -72,11 +69,6 @@ switch paradigm
         RCA_UH = RCA([13,17],:);
         RCA_LH = RCA([14,18],:);
         RCA_Cancellation2Sz = {RCA_20 RCA_14 RCA_F RCA_P1 RCA_P2 RCA_UR RCA_LR RCA_UH RCA_LH};
-%         var2str = @(x) inputname(1);
-%         for i = 1:length(RCA_Cancellation2Sz)
-%             names(i) = var2str(RCA_20);
-%         end
-%         boo = struct('data',{{RCA_20 RCA_14 RCA_F RCA_P1 RCA_P2 RCA_UR RCA_LR RCA_UH RCA_LH}});
 end
 
 %% RUN RCA
@@ -95,32 +87,35 @@ for i = 1:length(cnds)
 end
 toc
 
-%% MULTIPLE SUBPLOTS
-tc1 = linspace(0, timeCourseLen(1), size(rcaDataALL{1, 1}, 1));
-
-[mu12, s12] = prepData(rcaDataALL12);
-[mu78, s78] = prepData(rcaDataALL78);
-[mu1314, s1314] = prepData(rcaDataALL1314);
-[mu1920, s1920] = prepData(rcaDataALL1920);
-[mu2526, s2526] = prepData(rcaDataALL2526);
-[mu3132, s3132] = prepData(rcaDataALL3132);
-    
-group_upper_27_mu = [mu12(:, 1) mu78(:, 1) mu1314(:, 1)];
-group_lower_27_mu = [mu1920(:, 1) mu2526(:, 1) mu3132(:, 1)];   
-group_upper_27_s = [s12(:, 1) s78(:, 1) s1314(:, 1)];
-group_lower_27_s = [s1920(:, 1) s2526(:, 1) s3132(:, 1)];
-
-[h1, h2] = subplotMultipleComponents(tc1, {group_upper_27_mu, group_upper_27_s}, ... % each group = 1 cnd
-        {group_lower_27_mu, group_lower_27_s}, {'Lower 2.73 Hz', 'Upper 2.73Hz'});
-    saveas(h1, 'Group  2.73 Hz _byGroup.fig');
-    saveas(h2, 'Group  2.73 Hz _byRegion.fig');
+%% RCA 
+tic
+timeCourseLen = round(1000./stimFrq);
+[rcaDataALL12, ~, ~] = rcaRunProject(RCA([1 2],:), RCAfolder, timeCourseLen(1), '1v2', nPol);
+[rcaDataALL34, ~, ~] = rcaRunProject(RCA([3 4],:), RCAfolder, timeCourseLen(2), '3v4', nPol);
+[rcaDataALL56, ~, ~] = rcaRunProject(RCA([5 6],:), RCAfolder, timeCourseLen(3), '5v6', nPol);
+[rcaDataALL78, ~, ~] = rcaRunProject(RCA([7 8],:), RCAfolder, timeCourseLen(1), '7v8', nPol);
+[rcaDataALL910, ~, ~] = rcaRunProject(RCA([9 10],:), RCAfolder, timeCourseLen(2), '9v10', nPol);
+[rcaDataALL1112, ~, ~] = rcaRunProject(RCA([11 12],:), RCAfolder, timeCourseLen(3), '11v12', nPol);
+[rcaDataALL1314, ~, ~] = rcaRunProject(RCA([13 14],:), RCAfolder, timeCourseLen(1), '13v14', nPol);
+[rcaDataALL1516, ~, ~] = rcaRunProject(RCA([15 16],:), RCAfolder, timeCourseLen(2), '15v16', nPol);
+[rcaDataALL1718, ~, ~] = rcaRunProject(RCA([17 18],:), RCAfolder, timeCourseLen(3), '17v18', nPol);
+[rcaDataALL1920, ~, ~] = rcaRunProject(RCA([19 20],:), RCAfolder, timeCourseLen(1), '19v20', nPol);
+[rcaDataALL2122, ~, ~] = rcaRunProject(RCA([21 22],:), RCAfolder, timeCourseLen(2), '21v22', nPol);
+[rcaDataALL2324, ~, ~] = rcaRunProject(RCA([23 24],:), RCAfolder, timeCourseLen(3), '23v24', nPol);
+[rcaDataALL2526, ~, ~] = rcaRunProject(RCA([25 26],:), RCAfolder, timeCourseLen(1), '25v26', nPol);
+[rcaDataALL2728, ~, ~] = rcaRunProject(RCA([27 28],:), RCAfolder, timeCourseLen(2), '27v28', nPol);
+[rcaDataALL2930, ~, ~] = rcaRunProject(RCA([29 30],:), RCAfolder, timeCourseLen(3), '29v30', nPol);
+[rcaDataALL3132, ~, ~] = rcaRunProject(RCA([31 32],:), RCAfolder, timeCourseLen(1), '31v32', nPol);
+[rcaDataALL3334, ~, ~] = rcaRunProject(RCA([33 34],:), RCAfolder, timeCourseLen(2), '33v34', nPol);
+[rcaDataALL3536, ~, ~] = rcaRunProject(RCA([35 36],:), RCAfolder, timeCourseLen(3), '35v36', nPol);
+toc
 
 %% COMPARE CONDITIONS VIA TIMECOURSE
 chanROI = 71:76;
-cndROI = [16 20];
-subj = '0037'; % see names for options
+cndROI = [1 2];
+subj = 'avg'; % see names for options
 yLim = [-500 500];
-plotTimecourse(avgedData,subj,yLim,chanROI,cndROI,cndLabels,names,parentDir)
+plotTimecourse(avgedData,subj,yLim,chanROI,cndROI,{'SF 2.73 inc' 'SF 2.73 dec'},names,parentDir)
 
 %% CODE CHECK: RAW TIMECOURSE PLOTS
 subjROI = 1;

@@ -23,6 +23,12 @@ if strcmp(subj,'avg')
         end
     end
     data = squeeze(nanmean(extractData,4));
+    dataRearr = permute(data,[2 3 1]);
+    firstVal = dataRearr(:,:,1);
+    for i = 1:size(dataRearr,3)
+        baselined(:,:,i) = dataRearr(:,:,i) - firstVal;
+    end
+    data = permute(baselined,[3 1 2]);
     SEM = nanstd(extractData,0,4)./sqrt(length(avgedData));
 else
     while ~strcmp(subj,names{subjIdx})
@@ -52,12 +58,17 @@ for i = 1:length(cndROI)
                 shadedEB(squeeze(data(:,chanROI(j),2)),squeeze(SEM(:,chanROI(j),2)),red25);
             end
             pH(1,:) = plot(squeeze(data(:,chanROI(j),1)),'color','b');
-            pH(2,:) = plot(squeeze(data(:,chanROI(j),2)),'color','r');           
-        title(sprintf('%s: %s, Ch. %d',subj,cndLabels{cndROI(i)},chanROI(j)))
+            pH(2,:) = plot(squeeze(data(:,chanROI(j),2)),'color','r');   
+        if length(cndLabels) == cndROI
+            title(sprintf('%s: %s, Ch. %d',subj,cndLabels{i},chanROI(j)))
+            legend(pH,{cndLabels{1},cndLabels{2}},'Location','southwest')
+        else
+            title(sprintf('%s: %s, Ch. %d',subj,cndLabels{cndROI(i)},chanROI(j)))
+            legend(pH,{cndLabels{cndROI(1)},cndLabels{cndROI(2)}},'Location','southwest')
+        end
         set(gca,gcaOpts{:})
         xlabel('Time (ms)');
-        ylabel('Potential (mV)');
-        legend(pH,{cndLabels{cndROI(1)},cndLabels{cndROI(2)}},'Location','southwest')
+        ylabel('Potential (mV)');        
     end
 end
 
