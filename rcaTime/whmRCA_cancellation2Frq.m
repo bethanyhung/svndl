@@ -9,11 +9,12 @@ clear all
 close all
 
 parentDir = '/Users/babylab/Desktop/whm';
-paradigm = 'whmCancellation2Sz';
-stimFrq = 3;
+paradigm = 'whmCancellation2Frq';
+stimFrq = [30/11,3];
 nPol = 1;
+newSubj = 1;
 
-[RCA,RCAfolder] = raw2rca(parentDir,paradigm,stimFrq);
+[RCA,RCAfolder] = raw2rca(parentDir,paradigm,stimFrq,newSubj);
 
 % 1. Raw EEG data is loaded into one big matrix: nSubj (rows) x nTotalConditions(col)  at this step  we only replace bad epochs with NaN and that is it. Each element is nTolalDataSamplePoints x nElectrodes x nTrials.
 % 
@@ -32,30 +33,42 @@ nPol = 1;
 % errorbars: semDataAll = nanstd(catDataAll, [], 3)/(sqrt(size(catDataAll, 3)));
 
 
-%% PERFORM RCA
-
-% RCA_20 = RCA([1,3,5,7,9,11,13:16],:);
-% RCA_14 = RCA([2,4,6,8,10,12,17:20],:);
-% RCA_F = RCA([1:4],:);
-% RCA_P1 = RCA([1:4]+4,:);
-% RCA_P2 = RCA([1:4]+8,:);
-% RCA_UR = RCA([1,2,5,6,9,10,15,19],:);
-% RCA_LR = RCA([3,4,7,8,11,12,16,20],:);
-% RCA_UH = RCA([13,17],:);
-% RCA_LH = RCA([14,18],:);
-        
+%% PERFORM RCA        
 timeCourseLen = round(1000./stimFrq);
 tic
-[rcaDataALL12, ~, ~] = rcaRunProject(RCA([1 2],:), RCAfolder, timeCourseLen, '1v2', nPol);
-[rcaDataALL34, ~, ~] = rcaRunProject(RCA([3 4],:), RCAfolder, timeCourseLen, '3v4', nPol);
-[rcaDataALL56, ~, ~] = rcaRunProject(RCA([5 6],:), RCAfolder, timeCourseLen, '5v6', nPol);
-[rcaDataALL78, ~, ~] = rcaRunProject(RCA([7 8],:), RCAfolder, timeCourseLen, '7v8', nPol);
-[rcaDataALL910, ~, ~] = rcaRunProject(RCA([9 10],:), RCAfolder, timeCourseLen, '9v10', nPol);
-[rcaDataALL1112, ~, ~] = rcaRunProject(RCA([11 12],:), RCAfolder, timeCourseLen, '11v12', nPol);
-[rcaDataALL1317, ~, ~] = rcaRunProject(RCA([13 17],:), RCAfolder, timeCourseLen, '13v17', nPol);
-[rcaDataALL1418, ~, ~] = rcaRunProject(RCA([14 18],:), RCAfolder, timeCourseLen, '14v18', nPol);
-[rcaDataALL1519, ~, ~] = rcaRunProject(RCA([15 19],:), RCAfolder, timeCourseLen, '15v19', nPol);
-[rcaDataALL1620, ~, ~] = rcaRunProject(RCA([16 20],:), RCAfolder, timeCourseLen, '16v20', nPol);
+[rcaDataALL13, ~, ~] = rcaRunProject(RCA([1 3],:), RCAfolder, timeCourseLen(1), '1n3', nPol);
+[rcaDataALL24, ~, ~] = rcaRunProject(RCA([2 4],:), RCAfolder, timeCourseLen(2), '2n4', nPol);
+[rcaDataALL57, ~, ~] = rcaRunProject(RCA([5 7],:), RCAfolder, timeCourseLen(1), '5n7', nPol);
+[rcaDataALL68, ~, ~] = rcaRunProject(RCA([6 8],:), RCAfolder, timeCourseLen(2), '6n8', nPol);
+[rcaDataALL911, ~, ~] = rcaRunProject(RCA([9 11],:), RCAfolder, timeCourseLen(1), '9n11', nPol);
+[rcaDataALL1012, ~, ~] = rcaRunProject(RCA([10 12],:), RCAfolder, timeCourseLen(2), '10n12', nPol);
+[rcaDataALL1314, ~, ~] = rcaRunProject(RCA([13 14],:), RCAfolder, timeCourseLen(1), '13n14', nPol);
+[rcaDataALL1516, ~, ~] = rcaRunProject(RCA([15 16],:), RCAfolder, timeCourseLen(1), '15n16', nPol);
+[rcaDataALL1718, ~, ~] = rcaRunProject(RCA([17 18],:), RCAfolder, timeCourseLen(2), '17n18', nPol);
+[rcaDataALL1920, ~, ~] = rcaRunProject(RCA([19 20],:), RCAfolder, timeCourseLen(2), '19n20', nPol);
+%%
+timeCourseLen = round(1000./stimFrq);
+tic
+[rcaDataALL1, ~, ~] = rcaRunProject(RCA(1,:), RCAfolder, timeCourseLen, '1', nPol);
+[rcaDataALL2, ~, ~] = rcaRunProject(RCA(2,:), RCAfolder, timeCourseLen, '2', nPol);
+[rcaDataALL3, ~, ~] = rcaRunProject(RCA(3,:), RCAfolder, timeCourseLen, '3', nPol);
+[rcaDataALL4, ~, ~] = rcaRunProject(RCA(4,:), RCAfolder, timeCourseLen, '4', nPol);
+[rcaDataALL5, ~, ~] = rcaRunProject(RCA(5,:), RCAfolder, timeCourseLen, '5', nPol);
+[rcaDataALL6, ~, ~] = rcaRunProject(RCA(6,:), RCAfolder, timeCourseLen, '6', nPol);
+[rcaDataALL7, ~, ~] = rcaRunProject(RCA(7,:), RCAfolder, timeCourseLen, '7', nPol);
+[rcaDataALL8, ~, ~] = rcaRunProject(RCA(8,:), RCAfolder, timeCourseLen, '8', nPol);
+[rcaDataALL9, ~, ~] = rcaRunProject(RCA(9,:), RCAfolder, timeCourseLen, '9', nPol);
+[rcaDataALL10, ~, ~] = rcaRunProject(RCA(10,:), RCAfolder, timeCourseLen, '10', nPol);
+[rcaDataALL11, ~, ~] = rcaRunProject(RCA(11,:), RCAfolder, timeCourseLen, '11', nPol);
+[rcaDataALL12, ~, ~] = rcaRunProject(RCA(12,:), RCAfolder, timeCourseLen, '12', nPol);
+[rcaDataALL13, ~, ~] = rcaRunProject(RCA(13,:), RCAfolder, timeCourseLen, '13', nPol);
+[rcaDataALL14, ~, ~] = rcaRunProject(RCA(14,:), RCAfolder, timeCourseLen, '14', nPol);
+[rcaDataALL15, ~, ~] = rcaRunProject(RCA(15,:), RCAfolder, timeCourseLen, '15', nPol);
+[rcaDataALL16, ~, ~] = rcaRunProject(RCA(16,:), RCAfolder, timeCourseLen, '16', nPol);
+[rcaDataALL17, ~, ~] = rcaRunProject(RCA(17,:), RCAfolder, timeCourseLen, '17', nPol);
+[rcaDataALL18, ~, ~] = rcaRunProject(RCA(18,:), RCAfolder, timeCourseLen, '18', nPol);
+[rcaDataALL19, ~, ~] = rcaRunProject(RCA(19,:), RCAfolder, timeCourseLen, '19', nPol);
+[rcaDataALL20, ~, ~] = rcaRunProject(RCA(20,:), RCAfolder, timeCourseLen, '20', nPol);
 toc
 
 %% GENERATE PLOTS

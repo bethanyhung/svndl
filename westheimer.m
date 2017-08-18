@@ -1,7 +1,7 @@
 %%  NOTE
 %   This version of the Westheimer analysis script is compatible with the
-%   following paradigms: whmSuperSet, whmHexCancellation, &
-%   whmCancellation2Sz. whmMixed and whmHexFreq have been moved to a
+%   following paradigms: whmMixed, whmSuperSet, whmHexCancellation, &
+%   whmCancellation2Sz. whmHexFreq has been moved to a
 %   separate script.
 
 %% ADD CODE BASES TO PATH
@@ -12,27 +12,40 @@ addpath(genpath('~/code/git/svndl'));
 
 %% SET UP: DEFINE VARIABLES & LOAD DATA
 clear all
-close all
+% close all
 
-paradigm = 'whmSuperSet'; % 'whmSuperSet' | 'whmHexCancellation' | 'whmCancellation2Sz'
-stimFrq = [30/11,3,3.75]; % 3 for whmHexCancellation, whmCancellation2Sz | [30/11,3,3.75] for whmSuperSet
+paradigm = 'whmMixed'; % 'whmSuperSet' | 'whmHexCancellation' | 'whmCancellation2Sz'
+stimFrq = [3]; % 3 for whmHexCancellation, whmCancellation2Sz | [30/11,3,3.75] for whmSuperSet
 nPol = 2; % 2 for whmSuperset | 1 for whmHexCancellation, whmCancellation2Sz
+domain = 'time';
 % cndLabels = {'UR,F,20' 'UR,F,14' 'LR,F,20' 'LR,F,14' 'UR,P1,20' 'UR,P1,14' 'LR,P1,20' 'LR,P1,14' 'UR,P2,20' 'UR,P2,14' 'LR,P2,20' 'LR,P2,14' 'UH,20' 'LH,20' ...
 %     'UR,20' 'LR,20' 'UH,14' 'LH,14' 'UR,14' 'LR,14'};
 
 parentDir = '/Users/babylab/Desktop/whm';
-[dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm);
+[dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm,domain);
 
 tic
 for s = 1:length(dataSet)
     fprintf('Running subject %s\n', names{s});
     curDataFolder = sprintf('%s/%s', dataFolder,dataSet{s});   
-    [~,avgedData{s}, nCnd] = loadData(curDataFolder,stimFrq); % data: nChan x nTimept x nTri x nCnd
-%     for c = 1:nCnd
-%         RCA{c,s} = squeeze(data{s}{c}); % FORMAT: cell array {cnd x subj}(samples x channels x trials)
-%     end
+    [avgedData{s}, nCnd] = loadDataBins(curDataFolder,stimFrq); % data: nChan x nTimept x nTri x nCnd
 end
 toc
+
+%% MANUAL DFT
+for s = 1:length(dataSet)
+    totalData(:,:,s) = avgedData{s}{:};
+end
+data = squeeze(nanmean(totalData,3));
+oz = squeeze(data(:,75));
+
+Y = fft(oz);
+L = length(oz);
+P2 = abs(Y/L);
+P1 = P2(1:L/2+1);
+P1(2:end-1) = 2*P1(2:end-1);
+Fs = 420;
+f = Fs*(0:(L/2))/L;
 
 %% SORTING DATA FOR RCA
 switch paradigm    

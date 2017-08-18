@@ -1,4 +1,4 @@
-function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm)
+function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm,domain)
 % Takes in parent directory & paradigm; outputs necessary variables for
 % data sorting.
 %
@@ -14,7 +14,7 @@ function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm)
 %
 % Bethany H., 2017
 
-dataFolder = sprintf('%s/Data/%s',folder,paradigm);
+dataFolder = sprintf('%s/Data/%s/%s',folder,paradigm,domain);
 result = textscan(ls(dataFolder),'%s');
 dataSet = result{1}';
 
@@ -31,7 +31,7 @@ if length(names) > 1
 else
 end
 
-RCAfolder = sprintf('%s/RCA_%s',folder,paradigm);
+RCAfolder = sprintf('%s/RCA_%s_%s',folder,paradigm,domain);
 if exist(RCAfolder) ~= 7
     mkdir(RCAfolder)
 end

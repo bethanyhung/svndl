@@ -1,9 +1,9 @@
-function [RCA,RCAfolder] = raw2rca(parentDir,paradigm,stimFrq)
+function [RCA,RCAfolder] = raw2rca(parentDir,paradigm,stimFrq,newSubj)
 
 [dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm);
 fileRCAData = fullfile(RCAfolder, sprintf('processedData_%s.mat',paradigm));
     
-if ~exist(fileRCAData, 'file')
+if ~exist(fileRCAData, 'file') || newSubj
     tic
     for s = 1:length(dataSet)
         fprintf('Running subject %s\n', names{s});
