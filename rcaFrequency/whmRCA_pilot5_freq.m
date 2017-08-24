@@ -10,21 +10,22 @@ clear all
 close all
 
 parentDir = '/Users/babylab/Desktop/whm';
-paradigm = 'whmMixed';
+paradigm = 'whmPilot5';
 domain = 'freq';
+population = 'ctrl(age)'; % 'clinical' | 'normal' | 'ctrl(age)'
 runAgain = 0;
 freq = 3; % fundamental frequencies
 
-[dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm,domain);
-fileRCAData = fullfile(RCAfolder, sprintf('processedData_%s.mat',paradigm));
+[dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm,domain,population);
+fileRCAData = fullfile(RCAfolder, sprintf('processedData_%s_%s.mat',paradigm,population));
 
 for s = 1:length(dataSet)
     subjDataFolder{s} = sprintf('%s/%s', dataFolder,dataSet{s});  
 end
 
 binsToUse = 0; % 0 for non-sweep data
-freqsToUse = 1:5; % vector of frequency indices to include in RCA [1]
-condsToUse = {[1 2],[3 4],[5 6],[7 8],[9 10]}; % vector of conditions to use
+freqsToUse = 1:4; % vector of frequency indices to include in RCA [1]
+condsToUse = {[1 5],[2 6],[3 7],[4 8],[9 10]}; % vector of conditions to use
 trialsToUse = []; % vector of indices of trials to use
 nReg = 9; % RCA regularization parameter (defaults to 9)
 nComp = 3; % number of RCs to retain (defaults to 3)
@@ -76,13 +77,12 @@ for f = 1:length(freqsToUse)
 end
 
 %% PLOTTING
-
 phaseYLim = [-200 1400];
-cndNames = {'14amin','20amin','28amin','40amin','square'};
-gcaOptsAmp = {'XTick',freqsToUse,'XTickLabel',{'1F1','2F1','3F1','4F1','5F1'},...
+cndNames = {'10.4'' ped.','19.9'' ped.','30.3'' ped.','79.6'' ped.','100.4'' ped.'};
+gcaOptsAmp = {'XTick',freqsToUse,'XTickLabel',{'1F1','2F1','3F1','4F1'},...
     'YLim',[0 3],'box','off','tickdir','out',...
     'fontname','Helvetica','linewidth',1.5,'fontsize',10};
-gcaOptsPhase = {'XTick',freqsToUse*3,...
+gcaOptsPhase = {'XTick',freqsToUse*3,... 
     'YLim',phaseYLim,'box','off','tickdir','out',...
     'fontname','Helvetica','linewidth',1.5,'fontsize',10};
 
@@ -90,7 +90,7 @@ figure
 for c = 1:5
     subplot(5,5,c*5-4:c*5-3)        
         hold on
-        x = repmat(freqsToUse',[1,2]);
+        x = repmat([1;2;3;4],[1,2]);
         amps = squeeze(RC1_amp(:,c,:));
         SEMs = [squeeze(RC1_amp_neg_SEM(:,c,:)),squeeze(RC1_amp_pos_SEM(:,c,:))];
         b = bar(x,amps,'BarWidth',1);
@@ -106,7 +106,7 @@ for c = 1:5
         end
 
         legend([b,e],{'inc','dec','SEM'})
-        title(sprintf('RC1 harmonic amplitudes, %s',cndNames{c}))
+        title(sprintf('RC1 amps, %s - %s',cndNames{c},population))
         set(gca,gcaOptsAmp{:})
         ylabel('Amplitude (uV)')
         
@@ -126,7 +126,7 @@ for c = 1:5
         h(2,:) = errorbar(x',dec,decSEM(:,1),decSEM(:,2),'red','linestyle','none'); 
         
         if hSlope(1,c)
-            plot(15,inc(1), '*k')
+            plot(12,inc(1), '*k')
             text(x(1)-.3,phaseYLim(2)-520,sprintf('h = 1, p = %.3f',pSlope(1,c)),'FontSize',11,'Color','k');
         end
         
@@ -134,7 +134,7 @@ for c = 1:5
         text(x(1)-.3,phaseYLim(2)-230,sprintf('dec slope = %.2f ms, R^2 = %.3f',latency(1,c,2),Rsq(1,c,2)),'FontSize',11,'Color','r');
         text(x(1)-.3,phaseYLim(2)-390,sprintf('latency diff inc-dec = %.2f ms',incDelay(1,c)),'FontSize',11,'Color','k');
         
-        title(sprintf('RC1 phase shift, %s',cndNames{c}))
+        title(sprintf('RC1 phase, %s - %s',cndNames{c},population))
         set(gca,gcaOptsPhase{:})
         ylabel('Degrees')
         xlabel('Hz')
@@ -144,7 +144,7 @@ for c = 1:5
         plotOnEgi(A);
         title(sprintf('RC1 topography, %s',cndNames{c}))
 end
-saveas(gcf, fullfile(RCAfolder, sprintf('%s_RC1',paradigm)), 'fig');
+saveas(gcf, fullfile(RCAfolder, sprintf('%s_RC1_%s',paradigm,population)), 'fig');
 
 %% POLAR PLOTS
 % close all

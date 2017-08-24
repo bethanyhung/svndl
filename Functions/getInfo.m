@@ -1,10 +1,13 @@
-function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm,domain)
+function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm,domain,population)
 % Takes in parent directory & paradigm; outputs necessary variables for
 % data sorting.
 %
 % INPUTS
 %   folder:     String. Parent dir where everything relevant (non-code) is stored.
 %   paradigm:   String. Stimulus paradigm; same name as data folder.
+%   domain:     String. 'freq' or 'time' denoting the domain of the data export
+%   population: String. Name of folder containing group of people you want
+%               to use; optional. Defaults to none.
 %
 % OUTPUTS
 %   dataFolder:     String. Directory where paradigm-specific data is stored.
@@ -14,7 +17,12 @@ function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm,domain)
 %
 % Bethany H., 2017
 
-dataFolder = sprintf('%s/Data/%s/%s',folder,paradigm,domain);
+if nargin<4
+    dataFolder = sprintf('%s/Data/%s/%s',folder,paradigm,domain);
+else
+    dataFolder = sprintf('%s/Data/%s/%s/%s',folder,paradigm,domain,population);
+end
+
 result = textscan(ls(dataFolder),'%s');
 dataSet = result{1}';
 

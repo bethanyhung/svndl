@@ -5,15 +5,13 @@ addpath(genpath('~/code/git/sweepAnalysis'));
 addpath(genpath('~/code/git/matlab_lib'));
 addpath(genpath('~/code/git/svndl'));
 
-%% DEFINE PARAMETERS & PERFORM RCA
 clear all
 close all
 
 parentDir = '/Users/babylab/Desktop/whm';
-paradigm = 'whmMixed';
+paradigm = 'whmHexFreq';
 domain = 'freq';
-runAgain = 0;
-freq = 3; % fundamental frequencies
+runAgain = 1;
 
 [dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm,domain);
 fileRCAData = fullfile(RCAfolder, sprintf('processedData_%s.mat',paradigm));
@@ -24,7 +22,7 @@ end
 
 binsToUse = 0; % 0 for non-sweep data
 freqsToUse = 1:5; % vector of frequency indices to include in RCA [1]
-condsToUse = {[1 2],[3 4],[5 6],[7 8],[9 10]}; % vector of conditions to use
+condsToUse = {[1 2],[3 4],[5 6],[7 8],[9 10],[11 12],[13 14]}; % vector of conditions to use
 trialsToUse = []; % vector of indices of trials to use
 nReg = 9; % RCA regularization parameter (defaults to 9)
 nComp = 3; % number of RCs to retain (defaults to 3)
@@ -43,22 +41,44 @@ else
     rcaStruct = rcaStruct.rcaStruct;
 end
 
-% CALCULATING AMPLITUDE + PHASE AND SEM
+% EXTRACTING AMPLITUDE + PHASE AND CALCULATING SEM
 
 results = extractAmpPhase(rcaStruct);
 
-RC1_amp = squeeze(results.RC_amp(:,1,:,:));
+RC1_amp = squeeze(results.RC_amp(:,1,:,:)); % 5 5 2
 RC1_amp_neg_SEM = squeeze(results.RC_amp_neg_SEM(:,1,:,:));
 RC1_amp_pos_SEM = squeeze(results.RC_amp_pos_SEM(:,1,:,:));
 
-RC1_phase = squeeze(results.RC_phase(:,1,:,:));
+RC1_phase = squeeze(results.RC_phase(:,1,:,:)); % 5 5 2
 RC1_phase_neg_SEM = squeeze(results.RC_phase_neg_SEM(:,1,:,:));
 RC1_phase_pos_SEM = squeeze(results.RC_phase_pos_SEM(:,1,:,:));
 
 %% STATISTICS
 
 % LINEAR REGRESSION
-[yCalc, Rsq, latency, incDelay, slope_cat] = linearReg(results,freq);
+x = [1:5]'*3;  
+X = [ones(length(x),1) x];
+for c = 1:nComp
+    for cndSet = 1:length(condsToUse)
+        for cnd = 1:length(condsToUse{cndSet})
+            y = results.RC_phase(:,c,cndSet,cnd);
+            slope(:,c,cndSet,cnd) = X\y;
+            yCalc(:,c,cndSet,cnd) = X*slope(:,c,cndSet,cnd);
+            Rsq(c,cndSet,cnd) = 1 - sum((y - yCalc(:,c,cndSet,cnd)).^2)/sum((y - mean(y)).^2);
+            origslope(:,c,cndSet,cnd) = x\y;
+            origyCalc(:,c,cndSet,cnd) = x*origslope(:,c,cndSet,cnd);
+            Rsq2(c,cndSet,cnd) = 1 - sum((y - origyCalc(:,c,cndSet,cnd)).^2)/sum((y - mean(y)).^2);
+            for TrixSubj = 1:size(results.RC_cat_phase,3)
+                y = results.RC_cat_phase(:,c,TrixSubj,cndSet,cnd); % not sure if this is correct 
+                slope_inter_cat(:,c,TrixSubj,cndSet,cnd) = X\y;
+            end
+        end
+    end
+end
+slope_value = squeeze(slope(2,:,:,:));
+latency = slope_value*1000/(360*3);
+incDelay = latency(:,:,1) - latency(:,:,2);
+slope_cat = squeeze(slope_inter_cat(2,:,:,:,:));
 
 % PAIRED T-TEST
 for f = 1:length(freqsToUse)
@@ -78,11 +98,12 @@ end
 %% PLOTTING
 
 phaseYLim = [-200 1400];
+
 cndNames = {'14amin','20amin','28amin','40amin','square'};
-gcaOptsAmp = {'XTick',freqsToUse,'XTickLabel',{'1F1','2F1','3F1','4F1','5F1'},...
+gcaOptsAmp = {'XTick',1:5,'XTickLabel',{'1F1','2F1','3F1','4F1','5F1'},...
     'YLim',[0 3],'box','off','tickdir','out',...
     'fontname','Helvetica','linewidth',1.5,'fontsize',10};
-gcaOptsPhase = {'XTick',freqsToUse*3,...
+gcaOptsPhase = {'XTick',[1:5]*3,... % 'XTickLabel',{'1F1','2F1','3F1','4F1','5F1'},
     'YLim',phaseYLim,'box','off','tickdir','out',...
     'fontname','Helvetica','linewidth',1.5,'fontsize',10};
 
@@ -90,7 +111,7 @@ figure
 for c = 1:5
     subplot(5,5,c*5-4:c*5-3)        
         hold on
-        x = repmat(freqsToUse',[1,2]);
+        x = repmat([1;2;3;4;5],[1,2]);
         amps = squeeze(RC1_amp(:,c,:));
         SEMs = [squeeze(RC1_amp_neg_SEM(:,c,:)),squeeze(RC1_amp_pos_SEM(:,c,:))];
         b = bar(x,amps,'BarWidth',1);
@@ -100,8 +121,8 @@ for c = 1:5
         
         for f = 1:length(freqsToUse)
             if hAmp(f,1,c)
-                plot([f-0.28 f+0.28], [1 1]*max(amps(f,:))+0.2, '-k', 'LineWidth',1)
-                plot(f, max(amps(f,:))+0.35, '*k')
+                plot([f-0.28 f+0.28], [1 1]*max(amps(f,2))+0.2, '-k', 'LineWidth',1)
+                plot(f, max(amps(f,2))+0.35, '*k')
             end
         end
 
@@ -112,7 +133,7 @@ for c = 1:5
         
     subplot(5,5,c*5-2:c*5-1)
         hold on
-        x = freqsToUse*3;
+        x = [1:5]*3;
         inc = squeeze(RC1_phase(:,c,1));
         dec = squeeze(RC1_phase(:,c,2));
         incSEM = [squeeze(RC1_phase_neg_SEM(:,c,1)),squeeze(RC1_phase_pos_SEM(:,c,1))];
@@ -125,11 +146,6 @@ for c = 1:5
         p(2,:) = plot(x,dec,'o','color','red');
         h(2,:) = errorbar(x',dec,decSEM(:,1),decSEM(:,2),'red','linestyle','none'); 
         
-        if hSlope(1,c)
-            plot(15,inc(1), '*k')
-            text(x(1)-.3,phaseYLim(2)-520,sprintf('h = 1, p = %.3f',pSlope(1,c)),'FontSize',11,'Color','k');
-        end
-        
         text(x(1)-.3,phaseYLim(2)-100,sprintf('inc slope = %.2f ms, R^2 = %.3f',latency(1,c,1),Rsq(1,c,1)),'FontSize',11,'Color','b');
         text(x(1)-.3,phaseYLim(2)-230,sprintf('dec slope = %.2f ms, R^2 = %.3f',latency(1,c,2),Rsq(1,c,2)),'FontSize',11,'Color','r');
         text(x(1)-.3,phaseYLim(2)-390,sprintf('latency diff inc-dec = %.2f ms',incDelay(1,c)),'FontSize',11,'Color','k');
@@ -138,13 +154,12 @@ for c = 1:5
         set(gca,gcaOptsPhase{:})
         ylabel('Degrees')
         xlabel('Hz')
-        
     subplot(5,5,c*5)
         A = rcaStruct(c).A(:,1);
         plotOnEgi(A);
         title(sprintf('RC1 topography, %s',cndNames{c}))
 end
-saveas(gcf, fullfile(RCAfolder, sprintf('%s_RC1',paradigm)), 'fig');
+saveas(gcf, fullfile(RCAfolder, 'RC1_ampphase'), 'fig');
 
 %% POLAR PLOTS
 % close all
