@@ -1,4 +1,4 @@
-function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm,domain,population)
+function [dataFolder,dataSet,names,RCAfolder] = genDirectories(folder,paradigm,domain,population)
 % Takes in parent directory & paradigm; outputs necessary variables for
 % data sorting.
 %
@@ -17,11 +17,16 @@ function [dataFolder,dataSet,names,RCAfolder] = getInfo(folder,paradigm,domain,p
 %
 % Bethany H., 2017
 
+if nargin<3
+    domain = 'time';
+end
+
 if nargin<4
     dataFolder = sprintf('%s/Data/%s/%s',folder,paradigm,domain);
 else
     dataFolder = sprintf('%s/Data/%s/%s/%s',folder,paradigm,domain,population);
 end
+
 
 result = textscan(ls(dataFolder),'%s');
 dataSet = result{1}';

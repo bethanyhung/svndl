@@ -10,10 +10,10 @@ clear all
 close all
 
 parentDir = '/Users/babylab/Desktop/whm'; % top-level directory with data and RCA figure subfolders
-paradigm = 'whmMixed'; % name of data folder
+paradigm = 'whmCancellation2Frq'; % name of data folder
 domain = 'freq'; % name of data subfolder; 'time' | 'freq'
 runAgain = 0; % run RCA again?
-fundFreq = 3; % fundamental frequencies
+fundFreq = [30/11,3]; % fundamental frequencies
 
 [dataFolder,dataSet,names,RCAfolder] = genDirectories(parentDir,paradigm,domain);
 fileRCAData = fullfile(RCAfolder, sprintf('processedData_%s.mat',paradigm));
@@ -24,7 +24,7 @@ end
 
 binsToUse = 0; % 0 for non-sweep data
 freqsToUse = 1:5; % vector of frequency indices to include in RCA [1]
-condsToUse = {[1 2],[3 4],[5 6],[7 8],[9 10]}; % vector of conditions to use
+condsToUse = {[1 2],[3 4],[5 6],[7 8],[9 10],[11 12],[13 17],[14 18],[15 19],[16 20]}; % vector of conditions to use
 trialsToUse = []; % vector of indices of trials to use
 nReg = 9; % RCA regularization parameter (defaults to 9)
 nComp = 3; % number of RCs to retain (defaults to 3)
@@ -45,9 +45,10 @@ else
 end
 
 % CALCULATING AMPLITUDE + PHASE AND SEM
+
 results = extractAmpPhase(rcaStruct);
 
-RC1_amp = squeeze(results.RC_amp(:,1,:,:)); % dim: harmonics x components x cndSets x cnds(inc/dec)
+RC1_amp = squeeze(results.RC_amp(:,1,:,:));
 RC1_amp_neg_SEM = squeeze(results.RC_amp_neg_SEM(:,1,:,:));
 RC1_amp_pos_SEM = squeeze(results.RC_amp_pos_SEM(:,1,:,:));
 
@@ -56,6 +57,7 @@ RC1_phase_neg_SEM = squeeze(results.RC_phase_neg_SEM(:,1,:,:));
 RC1_phase_pos_SEM = squeeze(results.RC_phase_pos_SEM(:,1,:,:));
 
 %% STATISTICS
+
 % LINEAR REGRESSION
 [yCalc, Rsq, latency, incDelay, slope_cat] = linearReg(results,fundFreq);
 
@@ -74,20 +76,21 @@ for f = 1:length(freqsToUse)
     end
 end
 
-%% PLOTTING
-phaseYLim = [-200 1400];
-cndNames = {'14amin','20amin','28amin','40amin','square'};
+%% PLOTTING - split into two figs because too many conditions
+
+phaseYLim = [-200 1600];
+cndNames = {'UR,F','LR,F','UR,P1','LR,P1','UR,P2','LR,P2','full,UH','full,LH','full,UR','full,LR'};
 gcaOptsAmp = {'XTick',freqsToUse,'XTickLabel',{'1F1','2F1','3F1','4F1','5F1'},...
-    'YLim',[0 3],'box','off','tickdir','out',...
+    'YLim',[0 2],'box','off','tickdir','out',...
     'fontname','Helvetica','linewidth',1.5,'fontsize',10};
-gcaOptsPhase = {'XTick',freqsToUse*3,...
+gcaOptsPhase = {'XTick',freqsToUse,'XTickLabel',{'1F1','2F1','3F1','4F1','5F1'},...
     'YLim',phaseYLim,'box','off','tickdir','out',...
     'fontname','Helvetica','linewidth',1.5,'fontsize',10};
 nCndSet = length(cndNames);
 
 figure
-for c = 1:nCndSet
-    subplot(nCndSet,5,c*5-4:c*5-3)        
+for c = 1:nCndSet/2
+    subplot(nCndSet/2,5,c*5-4:c*5-3)        
         hold on
         x = repmat(freqsToUse',[1,2]);
         amps = squeeze(RC1_amp(:,c,:));
@@ -104,17 +107,17 @@ for c = 1:nCndSet
             end
         end
 
-        legend([b,e],{'inc','dec','SEM'})
+        legend([b,e],{'2.73 Hz','3 Hz','SEM'})
         title(sprintf('RC1 harmonic amplitudes, %s',cndNames{c}))
         set(gca,gcaOptsAmp{:})
-        if c == nCndSet
+        if c == nCndSet/2
             xlabel('Harmonic')
         end
         ylabel('Amplitude (uV)')
         
-    subplot(nCndSet,5,c*5-2:c*5-1)
+    subplot(nCndSet/2,5,c*5-2:c*5-1)
         hold on
-        x = freqsToUse*3;
+        x = freqsToUse;
         inc = squeeze(RC1_phase(:,c,1));
         dec = squeeze(RC1_phase(:,c,2));
         incSEM = [squeeze(RC1_phase_neg_SEM(:,c,1)),squeeze(RC1_phase_pos_SEM(:,c,1))];
@@ -128,7 +131,7 @@ for c = 1:nCndSet
         h(2,:) = errorbar(x',dec,decSEM(:,1),decSEM(:,2),'red','linestyle','none'); 
         
         if hSlope(1,c)
-            plot(15,inc(1), '*k')
+            plot(x(end),inc(1), '*k')
             text(x(1)-.3,phaseYLim(2)-520,sprintf('h = 1, p = %.3f',pSlope(1,c)),'FontSize',11,'Color','k');
         end
         
@@ -139,21 +142,87 @@ for c = 1:nCndSet
         title(sprintf('RC1 phase shift, %s',cndNames{c}))
         set(gca,gcaOptsPhase{:})
         ylabel('Degrees')
-        if c == nCndSet
+        if c == nCndSet/2
             xlabel('Hz')
         end
         
-    subplot(nCndSet,5,c*5)
+    subplot(nCndSet/2,5,c*5)
         A = rcaStruct(c).A(:,1);
         plotOnEgi(A);
         title(sprintf('RC1 topography, %s',cndNames{c}))
 end
-saveas(gcf, fullfile(RCAfolder, sprintf('%s_RC1',paradigm)), 'fig');
+saveas(gcf, fullfile(RCAfolder, sprintf('%s_RC1_1',paradigm)), 'fig');
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 10 10];
-print(fullfile(RCAfolder, sprintf('%s_RC1',paradigm)),'-dpng')
-fprintf('Figures saved.\n')
+print(fullfile(RCAfolder, sprintf('%s_RC1_1',paradigm)),'-dpng')
+fprintf('Figure 1 saved.\n')
+
+figure
+for c = 1:nCndSet/2
+    subplot(nCndSet/2,5,c*5-4:c*5-3)        
+        hold on
+        x = repmat(freqsToUse',[1,2]);
+        amps = squeeze(RC1_amp(:,c+nCndSet/2,:));
+        SEMs = [squeeze(RC1_amp_neg_SEM(:,c+nCndSet/2,:)),squeeze(RC1_amp_pos_SEM(:,c+nCndSet/2,:))];
+        b = bar(x,amps,'BarWidth',1);
+            b(1).FaceColor = 'blue';
+            b(2).FaceColor = 'red';              
+        e = groupedBarErrorbar(amps,SEMs);
+        
+        for f = 1:length(freqsToUse)
+            if hAmp(f,1,c+nCndSet/2)
+                plot([f-0.28 f+0.28], [1 1]*max(amps(f,:))+0.2, '-k', 'LineWidth',1)
+                plot(f, max(amps(f,:))+0.35, '*k')
+            end
+        end
+
+        legend([b,e],{'2.73 Hz','3 Hz','SEM'})
+        title(sprintf('RC1 harmonic amplitudes, %s',cndNames{c+nCndSet/2}))
+        set(gca,gcaOptsAmp{:})
+        ylabel('Amplitude (uV)')
+        
+    subplot(nCndSet/2,5,c*5-2:c*5-1)
+        hold on
+        x = freqsToUse;
+        inc = squeeze(RC1_phase(:,c+nCndSet/2,1));
+        dec = squeeze(RC1_phase(:,c+nCndSet/2,2));
+        incSEM = [squeeze(RC1_phase_neg_SEM(:,c+nCndSet/2,1)),squeeze(RC1_phase_pos_SEM(:,c+nCndSet/2,1))];
+        decSEM = [squeeze(RC1_phase_neg_SEM(:,c+nCndSet/2,2)),squeeze(RC1_phase_pos_SEM(:,c+nCndSet/2,2))]; 
+        
+        p(3,:) = plot(x',squeeze(yCalc(:,1,c+nCndSet/2,1)),'color','blue');
+        p(4,:) = plot(x',squeeze(yCalc(:,1,c+nCndSet/2,2)),'color','red');
+        p(1,:) = plot(x,inc,'o','color','blue');
+        h(1,:) = errorbar(x',inc,incSEM(:,1),incSEM(:,2),'blue','linestyle','none');
+        p(2,:) = plot(x,dec,'o','color','red');
+        h(2,:) = errorbar(x',dec,decSEM(:,1),decSEM(:,2),'red','linestyle','none'); 
+        
+        if hSlope(1,c+nCndSet/2)
+            plot(x(end),inc(1), '*k')
+            text(x(1)-.3,phaseYLim(2)-520,sprintf('h = 1, p = %.3f',pSlope(1,c+nCndSet/2)),'FontSize',11,'Color','k');
+        end
+        
+        text(x(1)-.3,phaseYLim(2)-100,sprintf('2.7Hz slope = %.2f ms, R^2 = %.3f',latency(1,c+nCndSet/2,1),Rsq(1,c+nCndSet/2,1)),'FontSize',11,'Color','b');
+        text(x(1)-.3,phaseYLim(2)-230,sprintf('3Hz slope = %.2f ms, R^2 = %.3f',latency(1,c+nCndSet/2,2),Rsq(1,c+nCndSet/2,2)),'FontSize',11,'Color','r');
+        text(x(1)-.3,phaseYLim(2)-390,sprintf('latency diff 2.7Hz-3Hz = %.2f ms',incDelay(1,c+nCndSet/2)),'FontSize',11,'Color','k');
+        
+        title(sprintf('RC1 phase shift, %s',cndNames{c+nCndSet/2}))
+        set(gca,gcaOptsPhase{:})
+        ylabel('Degrees')
+        xlabel('Hz')
+        
+    subplot(nCndSet/2,5,c*5)
+        A = rcaStruct(c+nCndSet/2).A(:,1);
+        plotOnEgi(A);
+        title(sprintf('RC1 topography, %s',cndNames{c+nCndSet/2}))
+end
+
+saveas(gcf, fullfile(RCAfolder, sprintf('%s_RC1_2',paradigm)), 'fig');
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 10 10];
+print(fullfile(RCAfolder, sprintf('%s_RC1_2',paradigm)),'-dpng')
+fprintf('Figure 2 saved.\n')
 
 %% POLAR PLOTS
 % close all

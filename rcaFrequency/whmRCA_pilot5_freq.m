@@ -3,20 +3,20 @@ addpath(genpath('~/code/git/rcaBase'));
 addpath(genpath('~/code/git/mrC'));
 addpath(genpath('~/code/git/sweepAnalysis'));
 addpath(genpath('~/code/git/matlab_lib'));
-addpath(genpath('~/code/git/svndl'));
+addpath(genpath('~/code/git/svndl2017'));
 
 %% DEFINE PARAMETERS & PERFORM RCA
 clear all
 close all
 
-parentDir = '/Users/babylab/Desktop/whm';
-paradigm = 'whmPilot5';
-domain = 'freq';
-population = 'ctrl(age)'; % 'clinical' | 'normal' | 'ctrl(age)'
-runAgain = 0;
-freq = 3; % fundamental frequencies
+parentDir = '/Users/babylab/Desktop/whm'; % top-level directory with data and RCA figure subfolders
+paradigm = 'whmPilot5'; % name of data folder
+domain = 'freq';  % name of data subfolder; 'time' | 'freq'
+population = 'ctrl(age)'; % name of data subfolder: 'clinical' | 'normal' | 'ctrl(age)'
+runAgain = 0; % run RCA again?
+fundFreq = 3; % fundamental frequencies
 
-[dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm,domain,population);
+[dataFolder,dataSet,names,RCAfolder] = genDirectories(parentDir,paradigm,domain,population);
 fileRCAData = fullfile(RCAfolder, sprintf('processedData_%s_%s.mat',paradigm,population));
 
 for s = 1:length(dataSet)
@@ -38,6 +38,7 @@ if ~exist(fileRCAData) || runAgain
     for c = 1:length(condsToUse)
         rcaStruct(c) = rcaSweep(subjDataFolder,binsToUse,freqsToUse,condsToUse{c},trialsToUse,nReg,nComp,dataType,compareChan,show,rcPlotStyle);
     end
+    rcaStruct = fixNans(rcaStruct);
     save(fileRCAData,'rcaStruct');
 else
     rcaStruct = load(fileRCAData);
@@ -59,7 +60,7 @@ RC1_phase_pos_SEM = squeeze(results.RC_phase_pos_SEM(:,1,:,:));
 %% STATISTICS
 
 % LINEAR REGRESSION
-[yCalc, Rsq, latency, incDelay, slope_cat] = linearReg(results,freq);
+[yCalc, Rsq, latency, incDelay, slope_cat] = linearReg(results,fundFreq);
 
 % PAIRED T-TEST
 for f = 1:length(freqsToUse)
@@ -85,10 +86,11 @@ gcaOptsAmp = {'XTick',freqsToUse,'XTickLabel',{'1F1','2F1','3F1','4F1'},...
 gcaOptsPhase = {'XTick',freqsToUse*3,... 
     'YLim',phaseYLim,'box','off','tickdir','out',...
     'fontname','Helvetica','linewidth',1.5,'fontsize',10};
+nCndSet = length(cndNames);
 
 figure
-for c = 1:5
-    subplot(5,5,c*5-4:c*5-3)        
+for c = 1:nCndSet
+    subplot(nCndSet,5,c*5-4:c*5-3)        
         hold on
         x = repmat([1;2;3;4],[1,2]);
         amps = squeeze(RC1_amp(:,c,:));
@@ -108,9 +110,12 @@ for c = 1:5
         legend([b,e],{'inc','dec','SEM'})
         title(sprintf('RC1 amps, %s - %s',cndNames{c},population))
         set(gca,gcaOptsAmp{:})
+        if c == nCndSet
+            xlabel('Harmonic')
+        end
         ylabel('Amplitude (uV)')
         
-    subplot(5,5,c*5-2:c*5-1)
+    subplot(nCndSet,5,c*5-2:c*5-1)
         hold on
         x = freqsToUse*3;
         inc = squeeze(RC1_phase(:,c,1));
@@ -126,25 +131,34 @@ for c = 1:5
         h(2,:) = errorbar(x',dec,decSEM(:,1),decSEM(:,2),'red','linestyle','none'); 
         
         if hSlope(1,c)
-            plot(12,inc(1), '*k')
-            text(x(1)-.3,phaseYLim(2)-520,sprintf('h = 1, p = %.3f',pSlope(1,c)),'FontSize',11,'Color','k');
+            plot(x(end),inc(1), '*k')
+            text(x(1)-.3,phaseYLim(2)-520,sprintf('h = 1, p = %.3f',pSlope(1,c)),'FontSize',9,'Color','k');
         end
         
-        text(x(1)-.3,phaseYLim(2)-100,sprintf('inc slope = %.2f ms, R^2 = %.3f',latency(1,c,1),Rsq(1,c,1)),'FontSize',11,'Color','b');
-        text(x(1)-.3,phaseYLim(2)-230,sprintf('dec slope = %.2f ms, R^2 = %.3f',latency(1,c,2),Rsq(1,c,2)),'FontSize',11,'Color','r');
-        text(x(1)-.3,phaseYLim(2)-390,sprintf('latency diff inc-dec = %.2f ms',incDelay(1,c)),'FontSize',11,'Color','k');
+        text(x(1)-.3,phaseYLim(2)-100,sprintf('inc: %.2f ms, R^2 = %.3f',latency(1,c,1),Rsq(1,c,1)),'FontSize',9,'Color','b');
+        text(x(1)-.3,phaseYLim(2)-230,sprintf('dec: %.2f ms, R^2 = %.3f',latency(1,c,2),Rsq(1,c,2)),'FontSize',9,'Color','r');
+        text(x(1)-.3,phaseYLim(2)-390,sprintf('latency diff inc-dec = %.2f ms',incDelay(1,c)),'FontSize',9,'Color','k');
         
         title(sprintf('RC1 phase, %s - %s',cndNames{c},population))
         set(gca,gcaOptsPhase{:})
         ylabel('Degrees')
-        xlabel('Hz')
+        if c == nCndSet
+            xlabel('Hz')
+        end
         
-    subplot(5,5,c*5)
+    subplot(nCndSet,5,c*5)
         A = rcaStruct(c).A(:,1);
         plotOnEgi(A);
         title(sprintf('RC1 topography, %s',cndNames{c}))
 end
+
+fprintf('Saving figures...\n')
 saveas(gcf, fullfile(RCAfolder, sprintf('%s_RC1_%s',paradigm,population)), 'fig');
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 10 10];
+print(fullfile(RCAfolder, sprintf('%s_RC1_%s',paradigm,population)),'-dpng')
+fprintf('Figures saved.\n')
 
 %% POLAR PLOTS
 % close all

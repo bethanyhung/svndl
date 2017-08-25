@@ -1,6 +1,23 @@
 function [RCA,RCAfolder] = raw2rca(parentDir,paradigm,stimFrq,newSubj)
+% Takes in parent directory & paradigm; outputs data formatted for RCA input.
+%
+% INPUTS
+%   parentDir:  String. Parent dir where everything relevant (non-code) is stored.
+%   paradigm:   String. Stimulus paradigm; same name as data folder.
+%   stimFrq:    String. 'freq' or 'time' denoting the domain of the data export
+%   newSubj:    Logical. If true, runs RCA again. Default = false.
+%
+% OUTPUTS
+%   RCA:        Data formatted for RCA input.
+%   RCAfolder:  Directory to RCA .mat storage
+%
+% Bethany H., 2017
 
-[dataFolder,dataSet,names,RCAfolder] = getInfo(parentDir,paradigm);
+if nargin<4
+    newSubj = 0;
+end
+
+[dataFolder,dataSet,names,RCAfolder] = genDirectories(parentDir,paradigm);
 fileRCAData = fullfile(RCAfolder, sprintf('processedData_%s.mat',paradigm));
     
 if ~exist(fileRCAData, 'file') || newSubj

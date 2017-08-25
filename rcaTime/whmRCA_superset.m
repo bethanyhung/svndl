@@ -2,7 +2,7 @@
 addpath(genpath('~/code/git/rcaBase'));
 addpath(genpath('~/code/git/mrC'));
 addpath(genpath('~/code/git/sweepAnalysis'));
-addpath(genpath('~/code/git/svndl'));
+addpath(genpath('~/code/git/svndl2017'));
 
 %% SET UP: DEFINE VARIABLES & LOAD DATA
 clear all
@@ -12,8 +12,9 @@ parentDir = '/Users/babylab/Desktop/whm';
 paradigm = 'whmSuperSet';
 stimFrq = [30/11,3,3.75];
 nPol = 2;
+newSubj = 0;
 
-[RCA,RCAfolder] = raw2rca(parentDir,paradigm,stimFrq);
+[RCA,RCAfolder] = raw2rca(parentDir,paradigm,stimFrq,newSubj);
 
 %% PERFORM RCA
 timeCourseLen = round(1000./stimFrq);
