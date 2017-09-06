@@ -15,7 +15,7 @@ function [yCalc, Rsq, latency, incDelay, slope_cat] = linearReg(results,fundFreq
 %               calculation.
 %
 % Bethany H., 2017
-
+%%
 nFrq = size(results.RC_amp,1);
 nCndSet = size(results.RC_amp,3);
 freq = repmat(fundFreq, [1,nCndSet]); 
@@ -23,7 +23,7 @@ freq = repmat(fundFreq, [1,nCndSet]);
 for c = 1:size(results.RC_phase,2)
     for cndSet = 1:size(results.RC_phase,3)
         for cnd = 1:size(results.RC_phase,4)
-            x = [1:nFrq]'*fundFreq(cnd); 
+            x = [1:nFrq]'*freq(cnd); 
             X = [ones(length(x),1) x];
             y = results.RC_phase(:,c,cndSet,cnd);
             slope(:,c,cndSet,cnd) = X\y;

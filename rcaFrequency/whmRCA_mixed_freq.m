@@ -1,15 +1,15 @@
 %% ADD CODE BASES TO PATH
-addpath(genpath('~/code/git/rcaBase'));
-addpath(genpath('~/code/git/mrC'));
-addpath(genpath('~/code/git/sweepAnalysis'));
-addpath(genpath('~/code/git/matlab_lib'));
-addpath(genpath('~/code/git/svndl2017'));
+addpath(genpath('~/code/svndl/rcaBase'));
+addpath(genpath('~/code/svndl/mrC'));
+addpath(genpath('~/code/svndl/sweepAnalysis'));
+addpath(genpath('~/code/svndl/matlab_lib'));
+addpath(genpath('~/code/svndl/svndl2017'));
 
 %% DEFINE PARAMETERS & PERFORM RCA
 clear all
 close all
 
-parentDir = '/Users/babylab/Desktop/whm'; % top-level directory with data and RCA figure subfolders
+parentDir = '/Users/bethanyhung/Desktop/svndl2017'; % top-level directory with data and RCA figure subfolders
 paradigm = 'whmMixed'; % name of data folder
 domain = 'freq'; % name of data subfolder; 'time' | 'freq'
 runAgain = 0; % run RCA again?
