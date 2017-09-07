@@ -9,7 +9,7 @@ addpath(genpath('~/code/svndl/svndl2017'));
 clear all
 close all
 
-parentDir = '/Users/bethanyhung/Desktop/svndl2017'; % top-level directory with data and RCA figure subfolders
+parentDir = '~/code/svndl/svndl2017/sample data'; % top-level directory with data and RCA figure subfolders
 paradigm = 'whmMixed'; % name of data folder
 domain = 'freq'; % name of data subfolder; 'time' | 'freq'
 runAgain = 0; % run RCA again?
