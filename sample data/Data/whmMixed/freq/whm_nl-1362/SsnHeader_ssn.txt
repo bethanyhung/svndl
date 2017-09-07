@@ -1,0 +1,1 @@
+iSess	SessDate	Operator	LastName	FirstName	BirthDate	DueDate	DayAge	Sex	Handedness	DaqRateHz	NChan	Montage	Notes	SsnLabel	SsnLevel	DomEye	FK_Mtg	PK_Sess20170623_131929	6/23/17	Operator	whm_nl-1362	New	NaN	NaN	NaN	m	NaN	420.00	128	HydroCel 128-Avg	NaN	None	0.000	Unkn	0	0
